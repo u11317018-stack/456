@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>音樂視覺化播放器</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            font-family: sans-serif;
+        }
+
+        /* 畫布背景 */
+        #visualizer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 播放按鈕 */
+        #playButton {
+            position: relative;
+            z-index: 10;
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            transition: transform 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #playButton:hover {
+            transform: scale(1.1);
+        }
+
+        /* 三角形播放圖標 */
+        .play-icon {
+            width: 0;
+            height: 0;
+            border-top: 15px solid transparent;
+            border-bottom: 15px solid transparent;
+            border-left: 25px solid #333;
+            margin-left: 5px;
+        }
+
+        /* 暫停圖標 */
+        .pause-icon {
+            display: none;
+            width: 20px;
+            height: 30px;
+            border-left: 7px solid #333;
+            border-right: 7px solid #333;
+        }
+
+        .playing .play-icon { display: none; }
+        .playing .pause-icon { display: block; }
+    </style>
+</head>
+<body>
+
+    <canvas id="visualizer"></canvas>
+    
+    <button id="playButton">
+        <div class="play-icon"></div>
+        <div class="pause-icon"></div>
+    </button>
+
+    <audio id="audioSource" src="music.mp3"></audio>
+
+    <script>
+        const btn = document.getElementById('playButton');
+        const audio = document.getElementById('audioSource');
+        const canvas = document.getElementById('visualizer');
+        const ctx = canvas.getContext('2d');
+
+        let audioContext, analyser, source, dataArray;
+
+        // 初始化畫布大小
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.onresize = resize;
+        resize();
+
+        function setupAudio() {
+            // 建立音訊環境
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            // 建立分析器
+            analyser = audioContext.createAnalyser();
+            // 連結音源
+            source = audio
