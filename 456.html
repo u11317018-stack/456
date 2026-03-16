@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>終極診斷播放器</title>
+    <style>
+        body { margin: 0; background: #000; color: #0f0; font-family: monospace; overflow: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; }
+        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        #playButton { z-index: 10; padding: 20px 40px; font-size: 20px; cursor: pointer; background: #222; color: #fff; border: 2px solid #fff; border-radius: 10px; }
+        #debug { position: absolute; bottom: 10px; left: 10px; z-index: 10; background: rgba(0,0,0,0.8); padding: 10px; font-size: 12px; max-width: 90%; }
+    </style>
+</head>
+<body>
+
+    <canvas id="canvas"></canvas>
+    <button id="playButton">強制播放音樂</button>
+    <div id="debug">狀態：等待點擊...</div>
+
+    <audio id="audio" src="music.mp3" crossorigin="anonymous"></audio>
+
+    <script>
+        const audio = document.getElementById('audio');
+        const btn = document.getElementById('playButton');
+        const debug = document.getElementById('debug');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        let audioCtx, analyser, source, data;
+
+        function log(msg) {
+            debug.innerHTML += `<br>> ${msg}`;
+            console.log(msg);
+        }
+
+        btn.addEventListener('click', function() {
+            log("按鈕已點擊");
+
+            // 1. 初始化 AudioContext
+            if (!audioCtx) {
+                try {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    analyser = audioCtx.createAnalyser();
+                    source = audioCtx.createMediaElementSource(audio);
+                    source.connect(analyser);
+                    analyser.connect(audioCtx.destination);
+                    analyser.fftSize = 128;
+                    data = new Uint8Array(analyser.frequencyBinCount);
+                    log("AudioContext 初始化成功");
+                    animate();
+                } catch (e) {
+                    log("初始化失敗: " + e.message);
+                }
+            }
+
+            // 2. 強制恢復 Context (解決懸掛問題)
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume().then(() => log("Context 已恢復"));
+            }
+
+            // 3. 嘗試播放
+            if (audio.paused) {
+                audio.play()
+                    .then(() => {
+                        log("音樂開始播放！");
+                        btn.innerText = "暫停";
+                    })
+                    .catch(err => {
+                        log("播放出錯: " + err.message);
+                        log("請確認檔案 'music.mp3' 是否與此 HTML 放在同個資料夾？");
+                    });
+            } else {
+                audio.pause();
+                btn.innerText = "繼續播放";
+                log("已暫停");
+            }
+        });
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (!analyser) return;
+            analyser.getByteFrequencyData(data);
+            
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            let x = 0;
+            const barWidth = canvas.width / data.length;
+            for (let i = 0; i < data.length; i++) {
+                const h = (data[i] / 255) * canvas.height;
+                ctx.fillStyle = `hsl(${i * 10}, 100%, 50%)`;
+                ctx.fillRect(x, canvas.height - h, barWidth - 2, h);
+                x += barWidth;
+            }
+        }
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+        window.dispatchEvent(new Event('resize'));
+    </script>
+</body>
+</html>
