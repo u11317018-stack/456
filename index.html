@@ -2,40 +2,43 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>音樂視覺化播放器</title>
     <style>
         body {
             margin: 0;
-            background-color: #000;
+            background-color: #050505;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             overflow: hidden;
-            font-family: sans-serif;
+            color: white;
+            font-family: system-ui, -apple-system, sans-serif;
         }
 
-        /* 畫布背景 */
+        /* 畫布層 */
         #visualizer {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
+            z-index: 1;
         }
 
         /* 播放按鈕 */
         #playButton {
             position: relative;
             z-index: 10;
-            width: 80px;
-            height: 80px;
-            background: rgba(255, 255, 255, 0.9);
+            width: 100px;
+            height: 100px;
+            background: #ffffff;
             border: none;
             border-radius: 50%;
             cursor: pointer;
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
-            transition: transform 0.2s;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -43,29 +46,39 @@
 
         #playButton:hover {
             transform: scale(1.1);
+            box-shadow: 0 0 50px rgba(255, 255, 255, 0.4);
         }
 
-        /* 三角形播放圖標 */
-        .play-icon {
+        /* 播放/暫停 圖標 */
+        .icon {
             width: 0;
             height: 0;
-            border-top: 15px solid transparent;
-            border-bottom: 15px solid transparent;
-            border-left: 25px solid #333;
+            border-style: solid;
+            transition: 0.2s;
+        }
+
+        .play {
+            border-width: 15px 0 15px 25px;
+            border-color: transparent transparent transparent #111;
             margin-left: 5px;
         }
 
-        /* 暫停圖標 */
-        .pause-icon {
-            display: none;
+        .pause {
             width: 20px;
             height: 30px;
-            border-left: 7px solid #333;
-            border-right: 7px solid #333;
+            border-width: 0 8px 0 8px;
+            border-color: #111;
+            border-style: double;
         }
 
-        .playing .play-icon { display: none; }
-        .playing .pause-icon { display: block; }
+        /* 訊息提示 */
+        #status {
+            position: absolute;
+            bottom: 30px;
+            z-index: 10;
+            font-size: 14px;
+            color: rgba(255,255,255,0.5);
+        }
     </style>
 </head>
 <body>
@@ -73,32 +86,4 @@
     <canvas id="visualizer"></canvas>
     
     <button id="playButton">
-        <div class="play-icon"></div>
-        <div class="pause-icon"></div>
-    </button>
-
-    <audio id="audioSource" src="music.mp3"></audio>
-
-    <script>
-        const btn = document.getElementById('playButton');
-        const audio = document.getElementById('audioSource');
-        const canvas = document.getElementById('visualizer');
-        const ctx = canvas.getContext('2d');
-
-        let audioContext, analyser, source, dataArray;
-
-        // 初始化畫布大小
-        function resize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        window.onresize = resize;
-        resize();
-
-        function setupAudio() {
-            // 建立音訊環境
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            // 建立分析器
-            analyser = audioContext.createAnalyser();
-            // 連結音源
-            source = audio
+        <div id="buttonIcon" class="
